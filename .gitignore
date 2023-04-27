@@ -1,5 +1,10 @@
+---This is the FieldHandler Script in ServerScriptService>FieldManager>FieldHandler
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local ServerScriptService = game:GetService("ServerScriptService")
+local Manager = require(ServerScriptService.PlayerData.Manager)
+
 local PlantWheatEvent = ReplicatedStorage.Remotes:WaitForChild("PlantWheatEvent")
 local UpdateCountdownEvent = ReplicatedStorage.Remotes:WaitForChild("UpdateCountdownEvent")
 local PlantPotatoEvent = ReplicatedStorage.Remotes:WaitForChild("PlantPotatoEvent")
@@ -9,14 +14,31 @@ local UpdateCarrotEvent = ReplicatedStorage.Remotes:WaitForChild("UpdateCarrotEv
 local PlantCornEvent = ReplicatedStorage.Remotes:WaitForChild("PlantCornEvent")
 local UpdateCornEvent = ReplicatedStorage.Remotes:WaitForChild("UpdateCornEvent")
 
-local CropField = Workspace.CropField
 local Growth = Workspace.Growth
-
 local Remotes = ReplicatedStorage.Remotes
 
-local Players = game:GetService("Players")
-local ServerScriptService = game:GetService("ServerScriptService")
-local Manager = require(ServerScriptService.PlayerData.Manager)
+local function getPlayerFields(player)
+	local playerName = player.Name
+	local fieldsFolderName = playerName .. "'s Fields"
+	return Workspace:WaitForChild(fieldsFolderName)
+end
+
+local function getCropField(player)
+	local playerFields = getPlayerFields(player)
+	return playerFields
+end
+
+
+local function getPlayerPersonalCropField(player)
+	local playerName = player.Name
+	local fieldsFolderName = playerName .. "'s Fields"
+	local playerPersonalCropField = Workspace:FindFirstChild(fieldsFolderName)
+	if playerPersonalCropField then
+		return playerPersonalCropField
+	end
+	return nil
+end
+
 
 Remotes.UpdateMasteryEvent.OnServerEvent:Connect(function(player, amount)
 	Manager.AdjustMastery(player, amount)
@@ -306,7 +328,10 @@ local function plantWheat(player)
 
 	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
 	if not humanoidRootPart then return end
-
+	
+	local CropField = getPlayerPersonalCropField(player)
+	if not CropField then return end
+	
 	local nearestField, minDistance = nil, math.huge
 
 	for _, field in ipairs(CropField:GetChildren()) do
@@ -316,7 +341,7 @@ local function plantWheat(player)
 			minDistance = distance
 		end
 	end
-
+	
 	if minDistance <= 10 then
 		local potatoStage1 = nearestField:FindFirstChild("PotatoStage1")
 		local potatoStage2 = nearestField:FindFirstChild("PotatoStage2")
@@ -399,7 +424,10 @@ local function plantPotato(player)
 	if not humanoidRootPart then return end
 
 	local nearestField, minDistance = nil, math.huge
-
+	
+	local CropField = getPlayerPersonalCropField(player)
+	if not CropField then return end
+	
 	for _, field in ipairs(CropField:GetChildren()) do
 		local distance = (humanoidRootPart.Position - field.PrimaryPart.Position).Magnitude
 		if distance < minDistance then
@@ -491,7 +519,10 @@ local function plantCarrot(player)
 	if not humanoidRootPart then return end
 
 	local nearestField, minDistance = nil, math.huge
-
+	
+	local CropField = getPlayerPersonalCropField(player)
+	if not CropField then return end
+	
 	for _, field in ipairs(CropField:GetChildren()) do
 		local distance = (humanoidRootPart.Position - field.PrimaryPart.Position).Magnitude
 		if distance < minDistance then
@@ -580,7 +611,10 @@ local function plantCorn(player)
 	if not humanoidRootPart then return end
 
 	local nearestField, minDistance = nil, math.huge
-
+	
+	local CropField = getPlayerPersonalCropField(player)
+	if not CropField then return end
+	
 	for _, field in ipairs(CropField:GetChildren()) do
 		local distance = (humanoidRootPart.Position - field.PrimaryPart.Position).Magnitude
 		if distance < minDistance then
